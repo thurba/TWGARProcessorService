@@ -31,7 +31,7 @@ internal class Program
         builder.Logging.ClearProviders();
         builder.Logging.AddLog4Net("log4net.config");
 
-        builder.Services.Configure<ARProcessorSettings>(builder.Configuration.GetSection("Kafka"));
+        builder.Services.Configure<ARProcessorSettings>(builder.Configuration.GetSection("ARProcessor"));
         builder.Services.Configure<APISettings>(builder.Configuration.GetSection("LaserficheAPI"));
         var host = builder.Build();
         host.Run();

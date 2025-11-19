@@ -12,7 +12,7 @@ public class Worker : BackgroundService
     private readonly IOptions<ARProcessorSettings> _settings;
     private readonly ApiClient _apiClient;
     private readonly IHostApplicationLifetime _hostApplicationLifetime;
-    private readonly string _watchPath = @"C:\IncomingFiles";
+    private readonly string _watchPath = string.Empty;
     private FileSystemWatcher _watcher;
 
 
@@ -23,7 +23,7 @@ public class Worker : BackgroundService
         _apiClient = apiClient;
         _hostApplicationLifetime = hostApplicationLifetime;
 
-        _watcher = new FileSystemWatcher(_watchPath, "*.zip")
+        _watcher = new FileSystemWatcher(_settings.Value.MonitorFilePath, "*.*")
         {
             NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
         };
@@ -46,6 +46,7 @@ public class Worker : BackgroundService
     private void OnNewFileReceived(object sender, FileSystemEventArgs e)
     {
         Console.WriteLine($"New file detected: {e.FullPath}");
+         _logger.LogInformation("New file detected: {FullPath}", e.FullPath);
 
     }
 
