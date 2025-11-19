@@ -20,4 +20,8 @@ public class APISettings
 
     public int CopyInvoiceWordTemplateRetryDelay { get; set; } = 1; // in seconds
 
+    public int ApiClientRetries { get; set; } = 2;
+    
+    public int ApiClientRetryDelay { get; set; } = 60; // in seconds
+
 }

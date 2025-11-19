@@ -1,4 +1,4 @@
-using TWGKafkaConsumerService;
+using TWGARProcessorService;
 using Microsoft.Extensions.Options;
 using LFApiClient;
 
@@ -13,7 +13,7 @@ internal class Program
             // Enabe Windows support only if on Windows + running as service
             builder.Services.AddWindowsService(options =>
             {
-                options.ServiceName = "KafkaConsumerService";
+                options.ServiceName = "ARProcessorService";
             });
 
         }
@@ -31,7 +31,7 @@ internal class Program
         builder.Logging.ClearProviders();
         builder.Logging.AddLog4Net("log4net.config");
 
-        builder.Services.Configure<KafkaSettings>(builder.Configuration.GetSection("Kafka"));
+        builder.Services.Configure<ARProcessorSettings>(builder.Configuration.GetSection("Kafka"));
         builder.Services.Configure<APISettings>(builder.Configuration.GetSection("LaserficheAPI"));
         var host = builder.Build();
         host.Run();
