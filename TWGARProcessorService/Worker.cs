@@ -6,6 +6,13 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using LFApiClient;
+
+using CsvHelper;
+using CsvHelper.Configuration;
+using System.Globalization;
+using System.IO;
+
+
 public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
@@ -23,7 +30,7 @@ public class Worker : BackgroundService
         _apiClient = apiClient;
         _hostApplicationLifetime = hostApplicationLifetime;
 
-        _watcher = new FileSystemWatcher(_settings.Value.MonitorFilePath, "*.*")
+        _watcher = new FileSystemWatcher(_settings.Value.MonitorFilePath, "*.zip")
         {
             NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
         };
@@ -45,8 +52,32 @@ public class Worker : BackgroundService
     
     private void OnNewFileReceived(object sender, FileSystemEventArgs e)
     {
-        Console.WriteLine($"New file detected: {e.FullPath}");
+
+         Console.WriteLine($"New file detected: {e.FullPath}");
          _logger.LogInformation("New file detected: {FullPath}", e.FullPath);
+        // decrypt - unzip - process
+
+        // TODO: Decrypt
+
+        // TODO: Unzip
+
+        // Find csv file and process
+       
+        using var reader = new StreamReader(@"C:\Temp\ARProcessor_Monitor\TWG_Laserfiche_2025-10-23-03-33-28_Metadata_Email - Copy.csv");
+        using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+        {
+            HasHeaderRecord = true,
+            MissingFieldFound = null // Ignore missing fields
+        });
+        var records = csv.GetRecords<InvoiceMetadata>().ToList();
+
+        foreach (var record in records)
+        {
+            Console.WriteLine($"Processing Invoice: {record.INVOICE_NUMBER}, Amount: {record.INVOICE_AMOUNT}, Invoice Date: {record.INVOICE_DATE}");
+            _logger.LogInformation("Processing Invoice: {InvoiceNumber}, Amount: {Amount}, Due Date: {DueDate}", record.INVOICE_NUMBER, record.INVOICE_AMOUNT, record.INVOICE_DATE);
+            // Add further processing logic here
+        }
+
 
     }
 
