@@ -265,7 +265,7 @@ public class ApiClient
                     Fields = new Dictionary<string, FieldToUpdate>
                     {
                         { "Document Source", new FieldToUpdate { Values = [new ValueToUpdate {
-                            Value = "EDI" }] } },
+                            Value = metadata.DocumentSource }] } },
                         { "Invoice Number", new FieldToUpdate { Values = [new ValueToUpdate {
                             Value = string.IsNullOrEmpty(metadata.InvoiceNumber) ? "UnknownInvoice" : (metadata.InvoiceNumber.Length > 40 ? metadata.InvoiceNumber.Substring(0,40) : metadata.InvoiceNumber) }] } },
                         { "PO Number", new FieldToUpdate { Values = [new ValueToUpdate {
@@ -277,7 +277,7 @@ public class ApiClient
                         { "Barcode", new FieldToUpdate { Values = [new ValueToUpdate {
                             Value = metadata.BarcodeNumber.ToString() }] } },
                         { "Vendor Name", new FieldToUpdate { Values = [new ValueToUpdate {
-                            Value = string.IsNullOrEmpty(metadata.VendorName) ? string.Empty : (metadata.VendorName.Length > 100 ? metadata.VendorName.Substring(0, 100) : metadata.VendorName) }] } },
+                            Value = string.IsNullOrEmpty(metadata.VendorName) ? "UnknownVendor" : (metadata.VendorName.Length > 100 ? metadata.VendorName.Substring(0, 100) : metadata.VendorName) }] } },
                         { "Vendor Code", new FieldToUpdate { Values = [new ValueToUpdate {
                             Value = string.IsNullOrEmpty(metadata.VendorCode) ? string.Empty : (metadata.VendorCode.Length > 40 ? metadata.VendorCode.Substring(0, 40) : metadata.VendorCode) }] } },
                         { "Customer Number", new FieldToUpdate { Values = [new ValueToUpdate {

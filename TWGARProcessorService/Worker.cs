@@ -85,12 +85,32 @@ public class Worker : BackgroundService
             {
                 // Map fields CSV values to LaserficheMetadata
                 InvoiceNumber = record.INVOICE_NUMBER != null ? record.INVOICE_NUMBER : "UnknownInvoiceNumber",
+                PONumber = record.PO_NUMBER,
                 InvoiceDate = DateTime.TryParse(record.INVOICE_DATE, out var invoiceDate) ? invoiceDate : default,
+                CustomerName = record.CUSTOMER_NAME,
+                CustomerNumber = record.CUSTOMER_NUMBER,
+                CustomerEmail = record.CUSTOMER_EMAIL,
+                BarcodeNumber = long.TryParse(record.BARCODE, out var barcode) ? barcode : 0,
+                VendorName = record.VENDOR_NAME,
+                VendorCode = record.VENDOR_CODE,
+                DeclaredRecord = record.DECLARED_RECORD,
+                DocumentSource = record.DOCUMENT_SOURCE,
+                GLCode = record.GL_CODE,
+                GLDate = DateTime.TryParse(record.GL_DATE, out var glDate) ? glDate : default,
+                ProcessedDate = DateTime.TryParse(record.PROCESSED_DATE, out var processedDate) ? processedDate : default,
+                TradeIndicator = record.TRADE_INDICATOR,
+                TotalNetAmount = record.TOTAL_NET_AMOUNT,
+                TotalTaxAmount = record.TOTAL_TAX_AMOUNT,
+                FreightCharge = record.FREIGHT_CHARGE,
+                CustomerAddress = record.CUSTOMER_ADDRESS,
+                HandlingCharge = record.HANDLING_CHARGE,
+                VendorAddress = record.VENDOR_ADDRESS,
+                VendorGST = record.VENDOR_GST,
                 InvoiceAmount = record.INVOICE_AMOUNT
-                
+
             };
 
-             bool success = await _apiClient.UploadFileAndMetadataToLF(record.INVOICE_NUMBER, metadata, _stoppingToken);
+             bool success = await _apiClient.UploadFileAndMetadataToLF(metadata.InvoiceNumber, metadata, _stoppingToken);
 
         }
 
