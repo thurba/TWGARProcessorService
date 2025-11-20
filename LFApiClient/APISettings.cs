@@ -16,6 +16,8 @@ public class APISettings
 
     public int EDIWorkingFolderEntryId { get; set; } = -1;
 
+    public int ARWorkingFolderEntryId { get; set; } = -1;
+
     public int CopyInvoiceWordTemplateRetries { get; set; } = 2;
 
     public int CopyInvoiceWordTemplateRetryDelay { get; set; } = 1; // in seconds

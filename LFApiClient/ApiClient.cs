@@ -251,4 +251,163 @@ public class ApiClient
                 
     }
 
+     public async Task<bool> UploadFileAndMetadataToLF(string invoiceFileName, LaserficheMetadata metadata, CancellationToken cancellationToken)
+    {
+        try
+        {
+            IRepositoryApiClient client = RepositoryApiClient.CreateFromUsernamePassword(_apiOptions.Value.RepositoryId, _apiOptions.Value.Username, _apiOptions.Value.Password, _apiOptions.Value.BaseUrl);
+
+            PostEntryWithEdocMetadataRequest postEntryRequest = new ()
+            {                
+                Template = "Invoice", 
+                Metadata = new ()
+                {
+                    Fields = new Dictionary<string, FieldToUpdate>
+                    {
+                        { "Document Source", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = "EDI" }] } },
+                        { "Invoice Number", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = string.IsNullOrEmpty(metadata.InvoiceNumber) ? "UnknownInvoice" : (metadata.InvoiceNumber.Length > 40 ? metadata.InvoiceNumber.Substring(0,40) : metadata.InvoiceNumber) }] } },
+                        { "PO Number", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = string.IsNullOrEmpty(metadata.PONumber) ? string.Empty : (metadata.PONumber.Length > 40 ? metadata.PONumber.Substring(0, 40) : metadata.PONumber) }] } },
+                        { "Invoice Date", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = metadata.InvoiceDate.ToString("yyyy-MM-dd")  }] } },
+                        { "Invoice Amount", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = metadata.InvoiceAmount.ToString() }] } },
+                        { "Barcode", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = metadata.BarcodeNumber.ToString() }] } },
+                        { "Vendor Name", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = string.IsNullOrEmpty(metadata.VendorName) ? string.Empty : (metadata.VendorName.Length > 100 ? metadata.VendorName.Substring(0, 100) : metadata.VendorName) }] } },
+                        { "Vendor Code", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = string.IsNullOrEmpty(metadata.VendorCode) ? string.Empty : (metadata.VendorCode.Length > 40 ? metadata.VendorCode.Substring(0, 40) : metadata.VendorCode) }] } },
+                        { "Customer Number", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = string.IsNullOrEmpty(metadata.CustomerNumber) ? string.Empty : (metadata.CustomerNumber.Length > 100 ? metadata.CustomerNumber.Substring(0, 100) : metadata.CustomerNumber) }] } },
+                        { "Customer Name", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = string.IsNullOrEmpty(metadata.CustomerName) ? string.Empty : (metadata.CustomerName.Length > 100 ? metadata.CustomerName.Substring(0, 100) : metadata.CustomerName) }] } },
+                        { "Delivery Name", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = string.IsNullOrEmpty(metadata.DeliveryName) ? string.Empty : (metadata.DeliveryName.Length > 100 ? metadata.DeliveryName.Substring(0, 100) : metadata.DeliveryName) }] } },
+                        { "Supplier Note", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = string.IsNullOrEmpty(metadata.SupplierNote) ? "" : (metadata.SupplierNote.Length > 100 ? metadata.SupplierNote.Substring(0,100) : metadata.SupplierNote) }] } },
+                        { "Total Net Amount", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = metadata.TotalNetAmount.ToString() }] } },
+                        { "Total Tax Amount", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = metadata.TotalTaxAmount.ToString() }] } },
+                        { "Vendor GST", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = string.IsNullOrEmpty(metadata.VendorGST) ? string.Empty : (metadata.VendorGST.Length > 11 ? metadata.VendorGST.Substring(0, 11) : metadata.VendorGST) }] } },
+                        { "Vendor Address", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = string.IsNullOrEmpty(metadata.VendorAddress) ? string.Empty : (metadata.VendorAddress.Length > 100 ? metadata.VendorAddress.Substring(0, 100) : metadata.VendorAddress) }] } },
+                        { "Customer Address", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = string.IsNullOrEmpty(metadata.CustomerAddress) ? string.Empty : (metadata.CustomerAddress.Length > 100 ? metadata.CustomerAddress.Substring(0, 100) : metadata.CustomerAddress) }] } },
+                        { "Delivery Address", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = string.IsNullOrEmpty(metadata.DeliveryAddress) ? string.Empty : (metadata.DeliveryAddress.Length > 100 ? metadata.DeliveryAddress.Substring(0, 100) : metadata.DeliveryAddress) }] } },
+                        { "Delivery Location ID", new FieldToUpdate { Values = [new ValueToUpdate {
+                            Value = string.IsNullOrEmpty(metadata.DeliveryLocationID) ? "" : (metadata.DeliveryLocationID.Length > 40 ? metadata.DeliveryLocationID.Substring(0,40) : metadata.DeliveryLocationID) }] } },
+                        { "Line Number", new FieldToUpdate  { Values = (metadata.LineNumber != null && metadata.LineNumber.Any()) 
+                                                                    ? metadata.LineNumber
+                                                                    .Select((number, idx) => new ValueToUpdate
+                                                                    {
+                                                                        Value = number.ToString(),
+                                                                        Position = idx + 1
+                                                                    })
+                                                                    .ToList() : new List<ValueToUpdate>{ new ValueToUpdate { Value = String.Empty, Position = 0 } }                                                                  
+                                                            } },
+                        { "Line Barcode", new FieldToUpdate  { Values = (metadata.LineBarcode != null && metadata.LineBarcode.Any()) 
+                                                                    ? metadata.LineBarcode
+                                                                    .Select((barcode, idx) => new ValueToUpdate
+                                                                    {
+                                                                        Value = string.IsNullOrEmpty(barcode) ? string.Empty : (barcode.Length > 100 ? barcode.Substring(0,100) : barcode),
+                                                                        Position = idx + 1
+                                                                    })
+                                                                    .ToList() : new List<ValueToUpdate>{ new ValueToUpdate { Value = String.Empty, Position = 0 } }                                                                  
+                                                            } },
+                        { "Line Description", new FieldToUpdate  {  Values = (metadata.LineDescription != null && metadata.LineDescription.Any())
+                                                                    ? metadata.LineDescription
+                                                                    .Select((description, idx) => new ValueToUpdate
+                                                                    {
+                                                                        Value = string.IsNullOrEmpty(description) ? string.Empty : (description.Length > 255 ? description.Substring(0,255) : description),
+                                                                        Position = idx + 1
+                                                                    })
+                                                                    .ToList() : new List<ValueToUpdate>{ new ValueToUpdate { Value = String.Empty, Position = 0 } }                                                                 
+                                                            } },
+                        { "Line Quantity", new FieldToUpdate  { Values = (metadata.LineQuantity != null && metadata.LineQuantity.Any())
+                                                                    ? metadata.LineQuantity
+                                                                    .Select((quantity, idx) => new ValueToUpdate
+                                                                    {
+                                                                        Value = quantity.ToString(),
+                                                                        Position = idx + 1
+                                                                    })
+                                                                    .ToList() : new List<ValueToUpdate>{ new ValueToUpdate { Value = String.Empty, Position = 0 } }                                                                
+                                                            } },
+                        { "Line Unit Price", new FieldToUpdate  {  Values = (metadata.LineUnitPrice != null && metadata.LineUnitPrice.Any())
+                                                                    ? metadata.LineUnitPrice
+                                                                    .Select((unitPrice, idx) => new ValueToUpdate
+                                                                    {
+                                                                        Value = unitPrice.ToString(),
+                                                                        Position = idx + 1
+                                                                    })
+                                                                    .ToList() : new List < ValueToUpdate >{ new ValueToUpdate { Value = String.Empty, Position = 0 } }                                                                
+                                                            } },
+                        {"Line Discount", new FieldToUpdate  { Values = (metadata.LineDiscount != null && metadata.LineDiscount.Any())
+                                                                    ? metadata.LineDiscount
+                                                                    .Select((discount, idx) => new ValueToUpdate
+                                                                    {
+                                                                        Value = discount.ToString(),
+                                                                        Position = idx + 1
+                                                                    })
+                                                                    .ToList() : new List < ValueToUpdate >{ new ValueToUpdate { Value = String.Empty, Position = 0 } }                                                                  
+                                                            } },
+                        {"Line Discount Amount", new FieldToUpdate  { Values = (metadata.LineDiscountAmount != null && metadata.LineDiscountAmount.Any())
+                                                                    ? metadata.LineDiscountAmount
+                                                                    .Select((discountAmount, idx) => new ValueToUpdate
+                                                                    {
+                                                                        Value = discountAmount.ToString(),
+                                                                        Position = idx + 1
+                                                                    })
+                                                                    .ToList() : new List < ValueToUpdate >{ new ValueToUpdate { Value = String.Empty, Position = 0 } }                                                                  
+                                                            } },
+                        { "Line Amount", new FieldToUpdate  { Values = (metadata.LineAmount != null && metadata.LineAmount.Any())
+                                                                    ? metadata.LineAmount
+                                                                    .Select((amount, idx) => new ValueToUpdate
+                                                                    {
+                                                                        Value = amount.ToString(),
+                                                                        Position = idx + 1
+                                                                    })
+                                                                    .ToList() : new List < ValueToUpdate >{ new ValueToUpdate { Value = String.Empty, Position = 0 } }                                                                
+                                                            } }
+
+                    }
+                }  
+            };
+           
+            
+            var result = await client.EntriesClient.ImportDocumentAsync(_apiOptions.Value.RepositoryId, _apiOptions.Value.ARWorkingFolderEntryId, invoiceFileName, true, null, GetFileParameter(), postEntryRequest, cancellationToken);
+
+            _logger.LogInformation("ImportDocumentAsync: Entry Result: TemplateId = {EntryId}", result.Operations.EntryCreate.EntryId);
+
+            return result.Operations.EntryCreate.EntryId > 0;
+            
+
+        }
+        catch (ApiException ex)
+        {
+            _logger.LogError("An API exception occurred, FileName: {FileName}, Message: {Message}",invoiceFileName, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while sending invoice to Laserfiche. Filename: {Filename}", invoiceFileName);
+        }
+
+
+        return false;
+                
+    }
+
+    private static FileParameter GetFileParameter()
+    {
+        Stream fileStream = null;
+        string fileLocation = @"C:\Temp\ARProcessor_Monitor\multiple invoice example.pdf";
+        fileStream = File.OpenRead(fileLocation);
+        return new FileParameter(fileStream, "testpdf", "application/pdf");
+    }
+
 }

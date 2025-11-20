@@ -21,6 +21,7 @@ public class Worker : BackgroundService
     private readonly IHostApplicationLifetime _hostApplicationLifetime;
     private readonly string _watchPath = string.Empty;
     private FileSystemWatcher _watcher;
+    private CancellationToken _stoppingToken;
 
 
     public Worker(ILogger<Worker> logger, IOptions<ARProcessorSettings> options, ApiClient apiClient, IHostApplicationLifetime hostApplicationLifetime)
@@ -29,6 +30,7 @@ public class Worker : BackgroundService
         _settings = options;
         _apiClient = apiClient;
         _hostApplicationLifetime = hostApplicationLifetime;
+        
 
         _watcher = new FileSystemWatcher(_settings.Value.MonitorFilePath, "*.zip")
         {
@@ -38,6 +40,8 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        _stoppingToken = stoppingToken;
+
         _logger.LogInformation("AR Processor Service Starting");
 
         _logger.LogInformation("Information: {Info}", "");
@@ -45,12 +49,13 @@ public class Worker : BackgroundService
         _watcher.Created += OnNewFileReceived;
         _watcher.EnableRaisingEvents = true;
 
+        await Task.Delay(Timeout.Infinite, stoppingToken);
         return; // Service runs until stopped
   
     }
 
     
-    private void OnNewFileReceived(object sender, FileSystemEventArgs e)
+    private async void OnNewFileReceived(object sender, FileSystemEventArgs e)
     {
 
          Console.WriteLine($"New file detected: {e.FullPath}");
@@ -75,7 +80,18 @@ public class Worker : BackgroundService
         {
             Console.WriteLine($"Processing Invoice: {record.INVOICE_NUMBER}, Amount: {record.INVOICE_AMOUNT}, Invoice Date: {record.INVOICE_DATE}");
             _logger.LogInformation("Processing Invoice: {InvoiceNumber}, Amount: {Amount}, Due Date: {DueDate}", record.INVOICE_NUMBER, record.INVOICE_AMOUNT, record.INVOICE_DATE);
-            // Add further processing logic here
+            
+            var metadata = new LaserficheMetadata
+            {
+                // Map fields CSV values to LaserficheMetadata
+                InvoiceNumber = record.INVOICE_NUMBER != null ? record.INVOICE_NUMBER : "UnknownInvoiceNumber",
+                InvoiceDate = DateTime.TryParse(record.INVOICE_DATE, out var invoiceDate) ? invoiceDate : default,
+                InvoiceAmount = record.INVOICE_AMOUNT
+                
+            };
+
+             bool success = await _apiClient.UploadFileAndMetadataToLF(record.INVOICE_NUMBER, metadata, _stoppingToken);
+
         }
 
 
